@@ -1,0 +1,44 @@
+{% extends "questions/submissions.jinja2" %}
+
+
+{% block submission_title scoped %}
+    {{ super() }} ({{ submission.language.name }})
+{% endblock %}
+
+
+{% block submission_data scoped %}
+    <h3 class="banner">{{ _('Source code') }}</h3>
+    <div class="codehilite">{{ submission.source|highlight(submission.language.pygments_mode()) }}</div>
+{% endblock %}
+
+
+{% block javascript %}
+    {{ super() }}
+    <script>
+        $(function () {
+            $('textarea[data-editor]').each(function () {
+                var textarea = $(this);
+                var mode = textarea.data('editor');
+                var editDiv = $('<div>', {
+                    position: 'absolute',
+                    width: textarea.width(),
+                    height: textarea.height(),
+                    readOnly: true,
+                    'class': textarea.attr('class')
+                });
+                textarea.css('display', 'none');
+                editDiv.insertBefore(textarea);
+                var editor = ace.edit(editDiv[0]);
+                editor.resize();
+                editor.getSession().setValue(textarea.val());
+                editor.getSession().setMode("ace/mode/" + (mode || 'python'));
+                editor.getSession().setUseSoftTabs(true);
+                editor.getSession().setUseWrapMode(true);
+                editor.setHighlightActiveLine(true);
+                editor.setShowPrintMargin(true);
+                editor.setTheme("ace/theme/xcode");
+                editor.setOptions({fontSize: '1.1em'});
+            });
+        });
+    </script>
+{% endblock %}

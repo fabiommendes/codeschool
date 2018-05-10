@@ -1,0 +1,32 @@
+from django.db import models
+
+
+class ClassroomQuerySet(models.QuerySet):
+    def user_enrolled(self, user):
+        """
+        Return a list of all courses in which the user is either as a student,
+        a teacher or staff member.
+        """
+
+        return (user.classrooms_as_teacher.all()
+                | user.classrooms_as_student.all()
+                | user.classrooms_as_staff.all())
+
+    def user_can_enroll(self, user):
+        """
+        List of courses that the user can enroll.
+        """
+
+        user_courses = self.user_enrolled(user)
+        qs = self.filter(is_public=True, accept_subscriptions=True, live=True)
+
+        # This works on Django 1.11
+        try:
+            return qs.difference(user_courses)
+        # Slow fallback
+        except AttributeError:
+            return qs.exclude(id__in=user_courses)
+
+
+# Fix bug on Wagtail
+ClassroomManager = models.Manager.from_queryset(ClassroomQuerySet)
